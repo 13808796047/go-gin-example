@@ -1,16 +1,16 @@
 package v1
 
 import (
-	"net/http"
 	"log"
+	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/astaxie/beego/validation"
-	"github.com/unknwon/com"
 	"github.com/13808796047/go-gin-example/models"
 	"github.com/13808796047/go-gin-example/pkg/e"
 	"github.com/13808796047/go-gin-example/pkg/setting"
 	"github.com/13808796047/go-gin-example/pkg/util"
+	"github.com/astaxie/beego/validation"
+	"github.com/gin-gonic/gin"
+	"github.com/unknwon/com"
 )
 
 //获取单个文章
@@ -83,8 +83,13 @@ func GetArticles(c *gin.Context) {
 		"data" : data,
 	})
 }
-
-//新增文章
+// @Summary 新增文章标签
+// @Produce  json
+// @Param name query string true "Name"
+// @Param state query int false "State"
+// @Param created_by query int false "CreatedBy"
+// @success 200 {object} gin.H
+// @Router /api/v1/tags [post]
 func AddArticle(c *gin.Context) {
 	tagId := com.StrTo(c.Query("tag_id")).MustInt()
 	title := c.Query("title")
@@ -130,7 +135,14 @@ func AddArticle(c *gin.Context) {
 	})
 }
 
-//修改文章
+// @Summary 修改文章标签
+// @Produce  json
+// @Param id path int true "ID"
+// @Param name query string true "ID"
+// @Param state query int false "State"
+// @Param modified_by query string true "ModifiedBy"
+// @success 200 {object} gin.H
+// @Router /api/v1/tags/{id} [put]
 func EditArticle(c *gin.Context) {
 	valid := validation.Validation{}
 
