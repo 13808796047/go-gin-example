@@ -5,6 +5,7 @@ import (
 	"github.com/13808796047/go-gin-example/pkg/setting"
 	"github.com/13808796047/go-gin-example/routers"
 	"net/http"
+	_ "github.com/13808796047/go-gin-example/models"
 )
 
 func main() {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/13808796047/go-gin-example/pkg/setting"
 	"github.com/jinzhu/gorm"
+	_ "github.com/go-sql-driver/mysql" //加载mysql
 	"log"
 )
 
@@ -25,8 +26,9 @@ func init() {
 		log.Fatalf("fail to get section 'database':%v", err)
 	}
 	dbType = sec.Key("TYPE").String()
-	dbName = sec.Key("NAME").String()
 	password = sec.Key("PASSWORD").String()
+	user = sec.Key("USER").String()
+	dbName = sec.Key("NAME").String()
 	host = sec.Key("HOST").String()
 	tablePrefix = sec.Key("TABLE_PREFIX").String()
 
@@ -37,7 +39,7 @@ func init() {
 		host,
 		dbName))
 	if err != nil {
-		log.Println(err)
+		log.Println(err,user,password,host,dbName)
 	}
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
 		return tablePrefix + defaultTableName
@@ -46,6 +48,7 @@ func init() {
 	db.LogMode(true)
 	db.DB().SetMaxIdleConns(10)
 	db.DB().SetMaxOpenConns(100)
+	//CloseDB()
 }
 func CloseDB() {
 	defer db.Close()
