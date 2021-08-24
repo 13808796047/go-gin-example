@@ -27,10 +27,16 @@ const (
 	FATAL
 )
 
-func init() {
-	filePath := getLogFileFullPath()
-	F = openLogFile(filePath)
-	logger = log.New(F,DefaultPrefix,log.LstdFlags)
+func Setup() {
+	var err error
+	filePath := getLogFilePath()
+	fileName := getLogFileName()
+	F, err = openLogFile(fileName, filePath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	logger = log.New(F, DefaultPrefix, log.LstdFlags)
 }
 func Debug(v ...interface{}) {
 	setPrefix(DEBUG)

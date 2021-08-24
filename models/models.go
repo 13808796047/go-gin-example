@@ -3,8 +3,8 @@ package models
 import (
 	"fmt"
 	"github.com/13808796047/go-gin-example/pkg/setting"
-	"github.com/jinzhu/gorm"
 	_ "github.com/go-sql-driver/mysql" //加载mysql
+	"github.com/jinzhu/gorm"
 	"log"
 )
 
@@ -16,21 +16,18 @@ type Model struct {
 	ModifiedOn int `json:"modified_on"`
 }
 
-func init() {
+func Setup() {
 	var (
 		err                                               error
 		dbType, dbName, user, password, host, tablePrefix string
 	)
-	sec, err := setting.Cfg.GetSection("database")
-	if err != nil {
-		log.Fatalf("fail to get section 'database':%v", err)
-	}
-	dbType = sec.Key("TYPE").String()
-	password = sec.Key("PASSWORD").String()
-	user = sec.Key("USER").String()
-	dbName = sec.Key("NAME").String()
-	host = sec.Key("HOST").String()
-	tablePrefix = sec.Key("TABLE_PREFIX").String()
+
+	dbType = setting.DatabaseSetting.Type
+	password = setting.DatabaseSetting.Password
+	user = setting.DatabaseSetting.User
+	dbName = setting.DatabaseSetting.Name
+	host = setting.DatabaseSetting.Host
+	tablePrefix = setting.DatabaseSetting.TablePrefix
 
 	// 连接数据库
 	db, err = gorm.Open(dbType, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
