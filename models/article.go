@@ -8,60 +8,67 @@ import (
 type Article struct {
 	Model
 	TagID int `json:"tag_id" gorm:"index"`
-	Tag Tag `json:"tag"`
+	Tag   Tag `json:"tag"`
 
-	Title string `json:"title"`
-	Desc string `json:"desc"`
-	Content string `json:"content"`
-	CreatedBy string `json:"created_by"`
+	Title      string `json:"title"`
+	Desc       string `json:"desc"`
+	Content    string `json:"content"`
+	CreatedBy  string `json:"created_by"`
 	ModifiedBy string `json:"modified_by"`
-	State int `json:"state"`
+	State      int    `json:"state"`
 }
 
-func ExistArticleByID(id int) bool {
+func ExistArticleByID(id int) (bool, error) {
 	var article Article
-	db.Select("id").Where("id = ?", id).First(&article)
+	err := db.Select("id").Where("id = ?", id).First(&article).Error
 
-	if article.ID > 0 {
-		return true
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return false, err
 	}
 
-	return false
+	if article.ID > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
-func GetArticleTotal(maps interface {}) (count int){
+func GetArticleTotal(maps interface{}) (count int) {
 	db.Model(&Article{}).Where(maps).Count(&count)
 
 	return
 }
 
-func GetArticles(pageNum int, pageSize int, maps interface {}) (articles []Article) {
+func GetArticles(pageNum int, pageSize int, maps interface{}) (articles []Article) {
 	db.Preload("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&articles)
 
 	return
 }
 
-func GetArticle(id int) (article Article) {
-	db.Where("id = ?", id).First(&article)
-	db.Model(&article).Related(&article.Tag)
+func GetArticle(id int) (*Article, error) {
+	var article Article
+	err := db.Where("id = ? AND deleted_on = ? ", id, 0).First(&article).Related(&article.Tag).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
 
-	return
+	return &article, nil
 }
 
-func EditArticle(id int, data interface {}) bool {
+func EditArticle(id int, data interface{}) bool {
 	db.Model(&Article{}).Where("id = ?", id).Updates(data)
 
 	return true
 }
 
-func AddArticle(data map[string]interface {}) bool {
-	db.Create(&Article {
-		TagID : data["tag_id"].(int),
-		Title : data["title"].(string),
-		Desc : data["desc"].(string),
-		Content : data["content"].(string),
-		CreatedBy : data["created_by"].(string),
-		State : data["state"].(int),
+func AddArticle(data map[string]interface{}) bool {
+	db.Create(&Article{
+		TagID:     data["tag_id"].(int),
+		Title:     data["title"].(string),
+		Desc:      data["desc"].(string),
+		Content:   data["content"].(string),
+		CreatedBy: data["created_by"].(string),
+		State:     data["state"].(int),
 	})
 
 	return true

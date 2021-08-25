@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/13808796047/go-gin-example/models"
 	_ "github.com/13808796047/go-gin-example/models"
+	"github.com/13808796047/go-gin-example/pkg/gredis"
 	"github.com/13808796047/go-gin-example/pkg/logging"
 	"github.com/13808796047/go-gin-example/pkg/setting"
 	"github.com/13808796047/go-gin-example/routers"
@@ -14,6 +15,7 @@ func main() {
 	setting.Setup()
 	models.Setup()
 	logging.Setup()
+	gredis.Setup()
 	router := routers.InitRouter()
 	s := &http.Server{
 		Addr:           fmt.Sprintf(":%d", setting.ServerSetting.HttpPort),

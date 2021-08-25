@@ -1,6 +1,9 @@
 package v1
 
 import (
+	"fmt"
+	"github.com/13808796047/go-gin-example/pkg/app"
+	"github.com/13808796047/go-gin-example/service/article_service"
 	"log"
 	"net/http"
 
@@ -15,31 +18,37 @@ import (
 
 //获取单个文章
 func GetArticle(c *gin.Context) {
+	fmt.Println("xxx")
+	appG := app.Gin{c}
 	id := com.StrTo(c.Param("id")).MustInt()
-
+	fmt.Println(id)
 	valid := validation.Validation{}
 	valid.Min(id, 1, "id").Message("ID必须大于0")
 
-	code := e.INVALID_PARAMS
-	var data interface {}
-	if ! valid.HasErrors() {
-		if models.ExistArticleByID(id) {
-			data = models.GetArticle(id)
-			code = e.SUCCESS
-		} else {
-			code = e.ERROR_NOT_EXIST_ARTICLE
-		}
-	} else {
-		for _, err := range valid.Errors {
-			log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
-		}
+	if valid.HasErrors() {
+		app.MarkErrors(valid.Errors)
+		appG.Response(http.StatusOK, e.INVALID_PARAMS, nil)
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code" : code,
-		"msg" : e.GetMsg(code),
-		"data" : data,
-	})
+	articleService := article_service.Article{ID: id}
+	exists, err := articleService.ExistByID()
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR_CHECK_EXIST_ARTICLE_FAIL, nil)
+		return
+	}
+	if !exists {
+		appG.Response(http.StatusOK, e.ERROR_NOT_EXIST_ARTICLE, nil)
+		return
+	}
+
+	article, err := articleService.Get()
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR_GET_ARTICLE_FAIL, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, article)
 }
 
 //获取多个文章
@@ -65,7 +74,7 @@ func GetArticles(c *gin.Context) {
 	}
 
 	code := e.INVALID_PARAMS
-	if ! valid.HasErrors() {
+	if !valid.HasErrors() {
 		code = e.SUCCESS
 
 		data["lists"] = models.GetArticles(util.GetPage(c), setting.AppSetting.PageSize, maps)
@@ -78,11 +87,12 @@ func GetArticles(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code" : code,
-		"msg" : e.GetMsg(code),
-		"data" : data,
+		"code": code,
+		"msg":  e.GetMsg(code),
+		"data": data,
 	})
 }
+
 // @Summary 新增文章标签
 // @Produce  json
 // @Param name query string true "Name"
@@ -107,9 +117,9 @@ func AddArticle(c *gin.Context) {
 	valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
 
 	code := e.INVALID_PARAMS
-	if ! valid.HasErrors() {
+	if !valid.HasErrors() {
 		if models.ExistTagByID(tagId) {
-			data := make(map[string]interface {})
+			data := make(map[string]interface{})
 			data["tag_id"] = tagId
 			data["title"] = title
 			data["desc"] = desc
@@ -129,9 +139,9 @@ func AddArticle(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code" : code,
-		"msg" : e.GetMsg(code),
-		"data" : make(map[string]interface{}),
+		"code": code,
+		"msg":  e.GetMsg(code),
+		"data": make(map[string]interface{}),
 	})
 }
 
@@ -165,12 +175,13 @@ func EditArticle(c *gin.Context) {
 	valid.MaxSize(content, 65535, "content").Message("内容最长为65535字符")
 	valid.Required(modifiedBy, "modified_by").Message("修改人不能为空")
 	valid.MaxSize(modifiedBy, 100, "modified_by").Message("修改人最长为100字符")
-
+	articleService := article_service.Article{ID: id}
+	exists, _ := articleService.ExistByID()
 	code := e.INVALID_PARAMS
-	if ! valid.HasErrors() {
-		if models.ExistArticleByID(id) {
+	if !valid.HasErrors() {
+		if exists {
 			if models.ExistTagByID(tagId) {
-				data := make(map[string]interface {})
+				data := make(map[string]interface{})
 				if tagId > 0 {
 					data["tag_id"] = tagId
 				}
@@ -201,9 +212,9 @@ func EditArticle(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code" : code,
-		"msg" : e.GetMsg(code),
-		"data" : make(map[string]string),
+		"code": code,
+		"msg":  e.GetMsg(code),
+		"data": make(map[string]string),
 	})
 }
 
@@ -215,8 +226,10 @@ func DeleteArticle(c *gin.Context) {
 	valid.Min(id, 1, "id").Message("ID必须大于0")
 
 	code := e.INVALID_PARAMS
-	if ! valid.HasErrors() {
-		if models.ExistArticleByID(id) {
+	articleService := article_service.Article{ID: id}
+	exists, _ := articleService.ExistByID()
+	if !valid.HasErrors() {
+		if exists {
 			models.DeleteArticle(id)
 			code = e.SUCCESS
 		} else {
@@ -229,8 +242,8 @@ func DeleteArticle(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code" : code,
-		"msg" : e.GetMsg(code),
-		"data" : make(map[string]string),
+		"code": code,
+		"msg":  e.GetMsg(code),
+		"data": make(map[string]string),
 	})
 }
